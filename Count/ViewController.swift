@@ -11,6 +11,7 @@
 
 import UIKit
 import Speech
+import CoreMotion
 
 class ViewController: UIViewController {
     
@@ -38,10 +39,22 @@ class ViewController: UIViewController {
 
     let randomInt = Int.random(in: 4..<100)
     
+    //加速度センサー
+    let motionManager = CMMotionManager()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         SFSpeechRecognizer.requestAuthorization { status in
             print("isAuthorized: \(status == .authorized)")
+        }
+        
+        //加速度
+        if motionManager.isAccelerometerAvailable{
+            motionManager.accelerometerUpdateInterval = 0.01
+            motionManager.startAccelerometerUpdates(to: OperationQueue.current!){date, error in
+                self.number2 = Int(date!.acceleration.x)
+                
+            }
         }
     }
     
@@ -82,6 +95,18 @@ class ViewController: UIViewController {
             
             if let result = result {
                 // ラベルに文字起こしの結果を表示
+                // message:認識されたテキスト
+                let message: String = result.bestTranscription.formattedString
+                
+                for char in message{
+                    
+                    if char.isNumber{
+                        //数字かどうかの判定
+                        self.number1 = Int(String(char))
+                        self.label1.text = String(char)
+                    }
+                }
+                
                 self.number1 = Int(result.bestTranscription.formattedString)
                 isFinal = result.isFinal
             }
@@ -97,6 +122,8 @@ class ViewController: UIViewController {
             }
         })
     }
+    
+    
     
 
 }
